@@ -1,0 +1,3142 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+<title>Mapa Educacional — MS</title>
+
+<link rel="stylesheet" href="./resources/ol.css">
+<link rel="stylesheet" href="./resources/fontawesome-all.min.css">
+
+<style>
+:root{
+    --navy:#0f172a;
+    --blue:#2563eb;
+    --muted:#64748b;
+    --line:#e2e8f0;
+    --panel:rgba(255,255,255,.97);
+    --shadow:0 18px 50px rgba(15,23,42,.18)
+}
+
+*{
+    box-sizing:border-box
+}
+
+html,body,#map{
+    width:100%;
+    height:100%;
+    margin:0;
+    padding:0;
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
+}
+
+body{
+    overflow:hidden;
+    background:#e2e8f0
+}
+
+#map{
+    position:fixed;
+    inset:0
+}
+
+.ol-control{
+    background:transparent!important;
+    padding:0!important
+}
+
+.ol-control button{
+    background:rgba(255,255,255,.95)!important;
+    color:#0f172a!important;
+    border:1px solid rgba(226,232,240,.95)!important;
+    box-shadow:0 6px 18px rgba(15,23,42,.12);
+    border-radius:10px!important;
+    margin:3px;
+    width:34px;
+    height:34px;
+    font-size:18px
+}
+
+.ol-zoom{
+    top:auto;
+    left:auto;
+    right:18px;
+    bottom:74px
+}
+
+.ol-scale-line{
+    left:18px;
+    bottom:18px;
+    background:rgba(255,255,255,.9)!important;
+    padding:4px 7px;
+    border-radius:7px
+}
+
+.ol-scale-line-inner{
+    border-color:#334155;
+    color:#334155
+}
+
+#map-title{
+    position:fixed;
+    z-index:20;
+    left:22px;
+    top:20px;
+    background:rgba(15,23,42,.92);
+    color:#fff;
+    border-radius:15px;
+    padding:13px 18px 14px;
+    box-shadow:var(--shadow);
+    letter-spacing:.01em
+}
+
+#map-title .eyebrow{
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:.16em;
+    opacity:.7;
+    margin-bottom:3px
+}
+
+#map-title div:nth-child(2){
+    font-size:18px;
+    font-weight:800;
+    line-height:1.2
+}
+
+#map-title small{
+    display:block;
+    font-size:11px;
+    color:#cbd5e1;
+    margin-top:4px
+}
+
+#control-panel{
+    position:fixed;
+    z-index:30;
+    top:20px;
+    right:20px;
+    width:340px;
+    max-height:calc(100vh - 40px);
+    overflow:auto;
+    background:var(--panel);
+    border:1px solid rgba(255,255,255,.75);
+    border-radius:18px;
+    box-shadow:var(--shadow);
+    padding:18px
+}
+
+#control-panel.collapsed{
+    display:none
+}
+
+.panel-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    margin-bottom:18px
+}
+
+.panel-kicker{
+    font-size:10px;
+    letter-spacing:.16em;
+    color:var(--blue);
+    font-weight:800
+}
+
+.panel-head h2{
+    font-size:21px;
+    margin:2px 0 0;
+    color:var(--navy)
+}
+
+#close-panel,
+#popup-close{
+    border:0;
+    background:#f1f5f9;
+    color:#334155;
+    width:30px;
+    height:30px;
+    border-radius:9px;
+    font-size:20px;
+    line-height:1;
+    cursor:pointer
+}
+
+section{
+    margin:0 0 19px
+}
+
+.section-label{
+    font-size:12px;
+    font-weight:800;
+    color:#475569;
+    margin-bottom:8px
+}
+
+.segmented{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:7px
+}
+
+.segmented button,
+.toggle-btn{
+    border:1px solid var(--line);
+    background:#f8fafc;
+    color:#475569;
+    border-radius:10px;
+    padding:10px 9px;
+    font-size:12px;
+    font-weight:700;
+    cursor:pointer;
+    transition:.18s
+}
+
+.segmented button.active,
+.toggle-btn.active{
+    background:#eff6ff;
+    border-color:#93c5fd;
+    color:#1d4ed8;
+    box-shadow:inset 0 0 0 1px #dbeafe
+}
+
+.segmented button:hover,
+.toggle-btn:hover{
+    transform:translateY(-1px)
+}
+
+.filter-select{
+    width:100%;
+    padding:11px 10px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    background:#f8fafc;
+    color:#334155;
+    font-size:12px;
+    font-weight:650;
+    outline:none;
+    margin-bottom:8px
+}
+
+.filter-select:focus{
+    border-color:#93c5fd;
+    box-shadow:0 0 0 3px rgba(37,99,235,.10)
+}
+
+.toggle-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:7px
+}
+
+.toggle-btn{
+    width:100%
+}
+
+.legend-section{
+    border-top:1px solid var(--line);
+    padding-top:16px
+}
+
+.legend-title{
+    font-size:14px;
+    font-weight:850;
+    color:var(--navy);
+    margin-bottom:8px
+}
+
+.legend-note{
+    font-size:10px;
+    color:#94a3b8;
+    margin-top:7px;
+    line-height:1.4
+}
+
+.reset-btn{
+    width:100%;
+    border:0;
+    border-radius:10px;
+    background:#0f172a;
+    color:white;
+    padding:11px;
+    font-weight:750;
+    cursor:pointer;
+    margin-top:2px
+}
+
+.reset-btn:hover{
+    background:#1e293b
+}
+
+.panel-footer{
+    font-size:10px;
+    line-height:1.45;
+    color:#94a3b8;
+    margin-top:12px;
+    text-align:center
+}
+
+#open-panel{
+    display:none;
+    position:fixed;
+    z-index:31;
+    right:18px;
+    top:18px;
+    width:42px;
+    height:42px;
+    border:0;
+    border-radius:12px;
+    background:#0f172a;
+    color:#fff;
+    font-size:20px;
+    box-shadow:var(--shadow);
+    cursor:pointer
+}
+
+#open-panel.visible{
+    display:block
+}
+
+#custom-popup{
+    position:fixed;
+    z-index:40;
+    display:none;
+    right:365px;
+    top:20px;
+    width:min(390px,calc(100vw - 40px));
+    max-height:calc(100vh - 40px);
+    overflow:auto;
+    background:rgba(255,255,255,.98);
+    border:1px solid #e2e8f0;
+    border-radius:16px;
+    box-shadow:var(--shadow);
+    padding:18px
+}
+
+#custom-popup.visible{
+    display:block
+}
+
+#popup-close{
+    position:absolute;
+    right:12px;
+    top:12px
+}
+
+.popup-type{
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:.14em;
+    color:#2563eb
+}
+
+#popup-body h3{
+    font-size:18px;
+    line-height:1.2;
+    color:#0f172a;
+    margin:4px 35px 14px 0
+}
+
+.popup-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px
+}
+
+.popup-grid>div{
+    background:#f8fafc;
+    border-radius:10px;
+    padding:9px
+}
+
+.popup-grid>div.wide{
+    grid-column:1/-1
+}
+
+.popup-grid b{
+    display:block;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    color:#64748b;
+    margin-bottom:3px
+}
+
+.popup-grid span{
+    font-size:12px;
+    color:#0f172a;
+    line-height:1.35
+}
+
+.pill{
+    display:inline-block!important;
+    border-radius:99px;
+    padding:2px 7px;
+    font-weight:800
+}
+
+.pill.yes{
+    background:#dcfce7;
+    color:#166534
+}
+
+.pill.no{
+    background:#e2e8f0;
+    color:#475569
+}
+
+.pill.missing{
+    background:#e5e7eb;
+    color:#4b5563
+}
+
+.popup-foot{
+    font-size:10px;
+    line-height:1.45;
+    color:#94a3b8;
+    margin-top:12px
+}
+
+#school-count{
+    font-size:11px;
+    color:#64748b;
+    margin-top:5px
+}
+
+/* Indicador de carregamento das camadas */
+#loading-layer{
+    display:none;
+    position:fixed;
+    z-index:100;
+    left:50%;
+    bottom:25px;
+    transform:translateX(-50%);
+    background:rgba(15,23,42,.94);
+    color:white;
+    padding:10px 16px;
+    border-radius:10px;
+    font-size:12px;
+    box-shadow:0 8px 25px rgba(0,0,0,.2)
+}
+
+#loading-layer.visible{
+    display:block
+}
+
+
+/* ============================================================
+   CONTROLES E LEGENDA PERSONALIZADOS
+   ============================================================ */
+
+#north-indicator{
+    position:fixed;
+    z-index:25;
+    top:20px;
+    right:375px;
+    width:48px;
+    height:62px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    background:rgba(255,255,255,.94);
+    border:1px solid #e2e8f0;
+    border-radius:13px;
+    box-shadow:0 8px 24px rgba(15,23,42,.15);
+    pointer-events:none
+}
+
+.north-arrow{
+    font-size:31px;
+    line-height:27px;
+    font-weight:900;
+    color:#0f172a
+}
+
+.north-label{
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:.12em;
+    color:#2563eb;
+    margin-top:3px
+}
+
+#map-legend{
+    position:fixed;
+    z-index:25;
+    left:18px;
+    bottom:56px;
+    width:275px;
+    display:none;
+    background:rgba(255,255,255,.96);
+    border:1px solid #e2e8f0;
+    border-radius:14px;
+    padding:12px 14px;
+    box-shadow:0 10px 30px rgba(15,23,42,.16)
+}
+
+#map-legend.visible{
+    display:block
+}
+
+.map-legend-title{
+    font-size:12px;
+    font-weight:850;
+    color:#0f172a;
+    margin-bottom:8px
+}
+
+.map-legend-subtitle{
+    font-size:10px;
+    color:#64748b;
+    margin-bottom:8px
+}
+
+.map-gradient{
+    display:none
+}
+
+.map-legend-classes{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    margin-top:7px
+}
+
+.map-legend-class{
+    display:grid;
+    grid-template-columns:22px 1fr;
+    align-items:center;
+    gap:7px;
+    font-size:10px;
+    color:#334155
+}
+
+.map-legend-swatch{
+    width:22px;
+    height:13px;
+    border:1px solid rgba(15,23,42,.12);
+    border-radius:3px
+}
+
+.map-legend-values{
+    display:none
+}
+
+.map-legend-hint{
+    margin-top:8px;
+    font-size:10px;
+    color:#64748b;
+    line-height:1.35
+}
+
+.school-multiselect{
+    min-height:118px;
+    padding:5px
+}
+
+.school-multiselect option{
+    padding:7px 6px
+}
+
+#stage-message{
+    position:fixed;
+    z-index:18;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:14px 20px;
+    background:rgba(15,23,42,.90);
+    color:#fff;
+    border-radius:14px;
+    box-shadow:0 12px 35px rgba(15,23,42,.25);
+    font-size:15px;
+    font-weight:800;
+    pointer-events:none
+}
+
+#stage-message.hidden{
+    display:none
+}
+
+.stage-message-icon{
+    width:27px;
+    height:27px;
+    border-radius:50%;
+    display:grid;
+    place-items:center;
+    background:#2563eb;
+    color:white;
+    font-weight:900
+}
+
+.info-button{
+    display:inline-grid;
+    place-items:center;
+    width:18px;
+    height:18px;
+    padding:0;
+    border:0;
+    border-radius:50%;
+    background:#2563eb;
+    color:white;
+    font-size:11px;
+    font-weight:900;
+    cursor:pointer;
+    vertical-align:-3px
+}
+
+.info-button:hover{
+    background:#1d4ed8
+}
+
+#cutoff-info-popup{
+    position:fixed;
+    z-index:60;
+    display:none;
+    right:365px;
+    top:210px;
+    width:min(360px,calc(100vw - 40px));
+    background:rgba(255,255,255,.98);
+    border:1px solid #e2e8f0;
+    border-radius:16px;
+    box-shadow:var(--shadow);
+    padding:18px
+}
+
+#cutoff-info-popup.visible{
+    display:block
+}
+
+#cutoff-info-popup h3{
+    font-size:18px;
+    color:#0f172a;
+    margin:4px 35px 10px 0
+}
+
+#cutoff-info-popup p{
+    font-size:12px;
+    line-height:1.5;
+    color:#475569;
+    margin:0
+}
+
+#cutoff-info-close{
+    position:absolute;
+    right:12px;
+    top:12px;
+    border:0;
+    background:#f1f5f9;
+    color:#334155;
+    width:30px;
+    height:30px;
+    border-radius:9px;
+    font-size:20px;
+    cursor:pointer
+}
+
+#performance-legend .legend-row{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    margin:3px 0
+}
+
+.legend-dot{
+    width:12px;
+    height:12px;
+    border-radius:50%;
+    border:2px solid white;
+    box-shadow:0 0 0 1px #cbd5e1
+}
+
+.legend-dot.green{background:#16a34a}
+.legend-dot.red{background:#dc2626}
+.legend-dot.gray{background:#94a3b8}
+
+#custom-popup.multi-school{
+    width:min(430px,calc(100vw - 40px))
+}
+
+.school-card{
+    border:1px solid #e2e8f0;
+    border-radius:13px;
+    padding:12px;
+    margin-top:10px;
+    background:#fff
+}
+
+.school-card:first-child{
+    margin-top:0
+}
+
+.school-card h3{
+    margin-bottom:10px!important
+}
+
+.selection-note{
+    font-size:10px;
+    color:#64748b;
+    margin-top:10px
+}
+
+@media(max-width:760px){
+
+    #map-title{
+        left:12px;
+        top:12px;
+        right:64px;
+        padding:10px 13px;
+        border-radius:13px
+    }
+
+    #map-title div:nth-child(2){
+        font-size:15px
+    }
+
+    #map-title small{
+        font-size:9px
+    }
+
+    #control-panel{
+        top:auto;
+        bottom:0;
+        left:0;
+        right:0;
+        width:100%;
+        max-height:78vh;
+        border-radius:18px 18px 0 0;
+        padding:16px
+    }
+
+    #custom-popup{
+        left:12px;
+        right:12px;
+        top:80px;
+        width:auto;
+        max-height:calc(100vh - 100px)
+    }
+
+    .ol-zoom{
+        right:12px;
+        bottom:82px
+    }
+
+    #north-indicator{
+        right:12px;
+        top:68px;
+        width:42px;
+        height:54px
+    }
+
+    #map-legend{
+        left:12px;
+        bottom:76px;
+        width:245px
+    }
+
+    #cutoff-info-popup{
+        left:12px;
+        right:12px;
+        top:90px;
+        width:auto
+    }
+}
+
+/* ============================================================
+   CAMADA ANALÍTICA — RESUMO, BUSCA E METODOLOGIA
+   ============================================================ */
+#insight-panel{
+    position:fixed; z-index:26; left:18px; bottom:18px; width:360px;
+    max-height:calc(100vh - 170px); overflow:auto; display:none;
+    background:rgba(255,255,255,.97); border:1px solid #e2e8f0;
+    border-radius:16px; box-shadow:var(--shadow); padding:15px;
+}
+#insight-panel.visible{display:block}
+.insight-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px}
+.insight-kicker{font-size:10px;letter-spacing:.14em;font-weight:900;color:#2563eb}
+.insight-head h3{margin:3px 0 0;color:#0f172a;font-size:17px;line-height:1.2}
+.insight-close{border:0;background:#f1f5f9;color:#334155;border-radius:8px;width:28px;height:28px;font-size:18px;cursor:pointer}
+.insight-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin:9px 0}
+.insight-card{background:#f8fafc;border-radius:10px;padding:9px}
+.insight-card b{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.03em;color:#64748b;margin-bottom:3px}
+.insight-card strong{font-size:17px;color:#0f172a}
+.insight-note{font-size:10px;line-height:1.45;color:#64748b;margin-top:9px}
+.insight-bar{height:9px;background:#e2e8f0;border-radius:99px;overflow:hidden;margin-top:4px}
+.insight-bar span{display:block;height:100%;background:#2563eb;border-radius:99px}
+.insight-row{font-size:11px;color:#334155;margin:8px 0}
+.insight-row-head{display:flex;justify-content:space-between;gap:8px}
+.context-box{border:1px solid #dbeafe;background:#eff6ff;border-radius:11px;padding:10px;margin-top:10px}
+.context-box b{color:#1d4ed8;font-size:11px}
+#school-search{margin-bottom:8px}
+.panel-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
+.panel-actions button{border:1px solid #cbd5e1;background:#f8fafc;color:#334155;border-radius:10px;padding:10px 8px;font-weight:750;font-size:11px;cursor:pointer}
+.panel-actions button:hover{background:#eff6ff;border-color:#93c5fd;color:#1d4ed8}
+#methodology-popup{position:fixed;z-index:70;display:none;left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,calc(100vw - 30px));max-height:80vh;overflow:auto;background:#fff;border:1px solid #e2e8f0;border-radius:16px;box-shadow:var(--shadow);padding:20px}
+#methodology-popup.visible{display:block}
+#methodology-popup h3{margin:3px 40px 12px 0;color:#0f172a;font-size:20px}
+#methodology-popup p,#methodology-popup li{font-size:12px;line-height:1.55;color:#475569}
+#methodology-close{position:absolute;right:12px;top:12px;border:0;background:#f1f5f9;color:#334155;width:30px;height:30px;border-radius:9px;font-size:20px;cursor:pointer}
+@media(max-width:760px){
+    #insight-panel{left:12px;right:12px;bottom:78px;width:auto;max-height:38vh}
+    .panel-actions{grid-template-columns:1fr 1fr}
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="map"></div>
+
+<div id="north-indicator" aria-label="Norte">
+    <div class="north-arrow">↑</div>
+    <div class="north-label">N</div>
+</div>
+
+<div id="stage-message">
+    <div class="stage-message-icon">!</div>
+    <div>Selecione uma etapa</div>
+</div>
+
+<div id="map-legend" aria-live="polite"></div>
+
+<div id="cutoff-info-popup" role="dialog" aria-modal="false" aria-labelledby="cutoff-info-title">
+    <button id="cutoff-info-close" aria-label="Fechar">×</button>
+    <div class="popup-type">CRITÉRIO SAEB</div>
+    <h3 id="cutoff-info-title">Nível adequado</h3>
+    <p>Nível de adequado de acordo com o estabelecido na NOTA TÉCNICA Nº 34/2025/CGEE/DIRED-INEP</p>
+</div>
+
+<div id="map-title">
+    <div class="eyebrow">FADEB/MS · NUAD</div>
+    <div>Mapa Educacional — MS</div>
+    <small>Escolas, indicadores educacionais e contexto territorial</small>
+</div>
+
+<div id="loading-layer">
+    Carregando camada...
+</div>
+
+<button id="open-panel" aria-label="Abrir filtros">☰</button>
+
+<aside id="control-panel">
+
+    <div class="panel-head">
+        <div>
+            <div class="panel-kicker">CONTROLES</div>
+            <h2>Mapa Educacional</h2>
+        </div>
+
+        <button id="close-panel" aria-label="Fechar">×</button>
+    </div>
+
+    <section>
+
+        <div class="section-label">Município</div>
+
+        <select id="municipio-select" class="filter-select">
+            <option value="">Carregando...</option>
+        </select>
+
+        <div class="legend-note">
+            Ao escolher um município, o mapa aproxima e exibe somente sua delimitação e os setores correspondentes.
+        </div>
+
+    </section>
+
+    <section>
+
+        <div class="section-label">Etapa</div>
+
+        <select id="etapa-select" class="filter-select"></select>
+
+        <div class="section-label">Rede</div>
+
+        <select id="rede-select" class="filter-select"></select>
+
+    </section>
+
+    <section>
+
+        <div class="section-label">Indicador das escolas</div>
+
+        <div class="segmented">
+
+            <button id="indicator-port" class="active">
+                Português
+            </button>
+
+            <button id="indicator-mat">
+                Matemática
+            </button>
+
+        </div>
+
+    </section>
+
+    <section>
+
+        <div class="section-label">Escola</div>
+
+        <input id="school-search" class="filter-select" type="search" placeholder="Buscar escola..." aria-label="Buscar escola">
+
+        <select id="performance-filter" class="filter-select" aria-label="Filtrar por desempenho">
+            <option value="all">Todos os desempenhos</option>
+            <option value="above">Acima do corte</option>
+            <option value="below">Abaixo ou igual ao corte</option>
+            <option value="missing">Sem informação</option>
+        </select>
+
+        <select id="data-filter" class="filter-select" aria-label="Filtrar disponibilidade de dados">
+            <option value="all">Todos os registros</option>
+            <option value="with">Com IDEB informado</option>
+            <option value="without">Sem IDEB informado</option>
+        </select>
+
+        <select id="school-select" class="filter-select school-multiselect" multiple size="6">
+            <option>Carregando...</option>
+        </select>
+
+        <div id="school-count"></div>
+        <div class="legend-note">Use Ctrl (Windows) ou Command (Mac) para selecionar mais de uma escola.</div>
+
+    </section>
+
+    <section>
+
+        <div class="section-label">Camadas</div>
+
+        <div class="toggle-grid">
+
+            <button id="toggle-renda" class="toggle-btn">
+                Renda
+            </button>
+
+            <button id="toggle-ppi" class="toggle-btn">
+                PPI
+            </button>
+
+            <button id="toggle-municipios" class="toggle-btn active">
+                Municípios
+            </button>
+
+        </div>
+
+        <div class="legend-note">
+            As camadas de Renda e PPI usam o mesmo arquivo territorial e são exibidas uma de cada vez.
+        </div>
+
+    </section>
+
+    <section class="legend-section">
+
+        <div class="legend-title">
+            Desempenho adequado — escala SAEB
+        </div>
+
+        <div id="performance-legend" style="font-size:11px;line-height:1.9;color:#475569"></div>
+        <div class="legend-note">
+            O ponto de corte varia conforme a etapa de ensino. <button id="info-cutoff" class="info-button" aria-label="Informações sobre o nível adequado">!</button>
+        </div>
+
+    </section>
+
+    <button id="reset-btn" class="reset-btn">
+        Limpar filtros e voltar ao MS
+    </button>
+
+    <div class="panel-actions">
+        <button id="insights-btn" type="button">Abrir resumo</button>
+        <button id="export-btn" type="button">Exportar CSV</button>
+        <button id="methodology-btn" type="button">Como interpretar</button>
+        <button id="share-btn" type="button">Copiar filtros</button>
+    </div>
+
+    <div class="panel-footer">
+        Selecione uma etapa para exibir as escolas. Clique nos pontos para comparar escolas.
+    </div>
+
+</aside>
+
+
+<div id="insight-panel" aria-live="polite">
+    <div class="insight-head">
+        <div><div class="insight-kicker">LEITURA CONTEXTUAL</div><h3 id="insight-title">Resumo da seleção</h3></div>
+        <button class="insight-close" id="insight-close" aria-label="Fechar resumo">×</button>
+    </div>
+    <div id="insight-content"></div>
+</div>
+
+<div id="methodology-popup" role="dialog" aria-modal="true" aria-labelledby="methodology-title">
+    <button id="methodology-close" aria-label="Fechar">×</button>
+    <div class="popup-type">COMO INTERPRETAR</div>
+    <h3 id="methodology-title">Leitura responsável dos indicadores</h3>
+    <p><b>Proficiência:</b> as notas de Português e Matemática representam o desempenho observado na escala utilizada pela base. O ponto de corte exibido no mapa é uma referência de adequação por etapa.</p>
+    <p><b>Indicador de rendimento:</b> deve ser lido junto com a proficiência. Uma escola pode ter desempenho adequado em uma área e não adequado em outra.</p>
+    <p><b>IDEB observado:</b> é apresentado como um indicador sintético disponível na base. Ele não deve ser usado isoladamente para criar rankings ou atribuir responsabilidades.</p>
+    <p><b>Renda e PPI:</b> são informações territoriais do setor censitário. Funcionam como contexto aproximado do entorno, não como descrição completa das famílias atendidas nem como prova de causalidade.</p>
+    <p><b>Dados ausentes:</b> “Sem informação” não significa zero. Sempre verifique o ano, a fonte, a quantidade de observações e os filtros ativos antes de comparar grupos.</p>
+</div>
+
+<div id="custom-popup">
+
+    <button id="popup-close" aria-label="Fechar">×</button>
+
+    <div id="popup-body"></div>
+
+</div>
+
+
+<!-- Bibliotecas -->
+<script src="./resources/qgis2web_expressions.js"></script>
+<script src="./resources/functions.js"></script>
+<script src="./resources/ol.js"></script>
+<script src="./resources/Autolinker.min.js"></script>
+
+
+<!-- Estilos -->
+<script src="./styles/Municipios_Mato_Grosso_do_Sul_2025_3_style.js"></script>
+<script src="./styles/MetadeMatemtica_4_style.js"></script>
+<script src="./styles/MetadePortugus_5_style.js"></script>
+
+
+<!--
+IMPORTANTE:
+
+NÃO carregamos aqui:
+
+Renda_1_otimizada.js
+PPI_2_otimizada.js
+
+Esses arquivos serão carregados somente quando
+o usuário clicar nos respectivos botões.
+-->
+<script src="./layers/Municipios_MS_2025_otimizado.js"></script>
+<script src="./layers/Escolas_IDEB_2025.js"></script>
+
+<script src="./layers/layers.js"></script>
+
+<script>
+
+(function(){
+
+'use strict';
+
+
+/* ============================================================
+   CONFIGURAÇÃO DAS CAMADAS SOB DEMANDA
+   ============================================================ */
+
+var rendaLoaded = false;
+var ppiLoaded = false;
+
+var rendaLoading = false;
+var ppiLoading = false;
+
+/* Camadas carregadas sob demanda */
+var lyr_Renda_1 = null;
+var lyr_PPI_2 = null;
+
+/* Uma única fonte de setores contém Renda e PPI. */
+var setoresLoaded = false;
+var setoresLoading = false;
+var setoresLoadingPromise = null;
+var setoresSource = null;
+
+
+/* ============================================================
+   MAPA
+   ============================================================ */
+
+var map = new ol.Map({
+
+    target:'map',
+
+    layers:[
+        lyr_GoogleSatellite_0,
+        lyr_Municipios_Mato_Grosso_do_Sul_2025_3,
+        lyr_MetadeMatemtica_4,
+        lyr_MetadePortugus_5
+    ],
+
+    view:new ol.View({
+
+        center:ol.proj.fromLonLat([
+            -54.5,
+            -20.5
+        ]),
+
+        zoom:6.2
+
+    }),
+
+    controls:ol.control.defaults.defaults({
+
+        zoom:false,
+        attribution:true,
+        rotate:false
+
+    }).extend([
+
+        new ol.control.Zoom(),
+
+        new ol.control.ScaleLine()
+
+    ])
+
+});
+
+/*
+ * Ordem visual:
+ * 0  = satélite
+ * 5  = setores (Renda/PPI)
+ * 20 = limites municipais
+ * 30 = escolas
+ *
+ * Assim, os setores nunca cobrem os pontos das escolas.
+ */
+lyr_GoogleSatellite_0.setZIndex(0);
+lyr_Municipios_Mato_Grosso_do_Sul_2025_3.setZIndex(20);
+lyr_MetadeMatemtica_4.setZIndex(30);
+lyr_MetadePortugus_5.setZIndex(30);
+
+/* Garante que o mapa inicial enquadre os 79 municípios. */
+var initialMunicipalExtent =
+    jsonSource_Municipios_Mato_Grosso_do_Sul_2025_3.getExtent();
+
+if (
+    initialMunicipalExtent &&
+    initialMunicipalExtent.every(Number.isFinite)
+) {
+    map.getView().fit(
+        initialMunicipalExtent,
+        {
+            padding:[90,90,90,90],
+            duration:0,
+            maxZoom:7
+        }
+    );
+}
+
+
+/* ============================================================
+   ESTADO
+   ============================================================ */
+
+var state={
+
+    etapa:'',
+    rede:'',
+    municipio:'',
+    indicator:'port',
+
+    renda:false,
+    ppi:false,
+
+    municipios:true
+
+};
+
+var selectedSchools=[];
+
+
+/* ============================================================
+   DADOS INICIAIS
+   ============================================================ */
+
+var schoolFeatures =
+    jsonSource_Escolas_IDEB_2025.getFeatures();
+
+var munFeatures =
+    jsonSource_Municipios_Mato_Grosso_do_Sul_2025_3.getFeatures();
+
+
+/* ============================================================
+   FUNÇÕES AUXILIARES
+   ============================================================ */
+
+function norm(v){
+
+    return v===null || v===undefined
+        ? ''
+        : String(v).trim();
+
+}
+
+
+function esc(v){
+
+    return String(v)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;');
+
+}
+
+
+function uniqueSorted(arr){
+
+    return Array.from(
+        new Set(arr.filter(Boolean))
+    ).sort(function(a,b){
+
+        return a.localeCompare(
+            b,
+            'pt-BR'
+        );
+
+    });
+
+}
+
+
+function optionHTML(items,placeholder){
+
+    return '<option value="">'
+        + placeholder
+        + '</option>'
+        +
+        items.map(function(x){
+
+            return '<option value="'
+                + esc(x)
+                + '">'
+                + esc(x)
+                + '</option>';
+
+        }).join('');
+
+}
+
+function schoolKey(feature){
+    return norm(feature.get('ID_ESCOLA'))+'|'+norm(feature.get('ETAPA'));
+}
+
+function getSelectedSchoolFeatures(){
+    return selectedSchools.map(function(key){
+        return schoolFeatures.find(function(f){
+            return schoolKey(f)===key;
+        });
+    }).filter(Boolean);
+}
+
+function clearSchoolSelection(){
+    selectedSchools=[];
+    selectedSource.clear();
+    state.escola='';
+    var sel=document.getElementById('school-select');
+    if(sel){
+        Array.from(sel.options).forEach(function(o){o.selected=false;});
+    }
+}
+
+function toggleSchoolSelection(feature){
+    var key=schoolKey(feature);
+    var idx=selectedSchools.indexOf(key);
+    if(idx>=0){
+        selectedSchools.splice(idx,1);
+    }else{
+        selectedSchools.push(key);
+    }
+    state.escola=selectedSchools.length===1 ? norm(feature.get('ID_ESCOLA')) : '';
+    highlightSelectedFeatures();
+    syncSchoolSelect();
+
+    var features=getSelectedSchoolFeatures();
+    if(features.length){
+        showPopup(features);
+    }else{
+        document.getElementById('custom-popup').classList.remove('visible','multi-school');
+    }
+}
+
+function syncSchoolSelect(){
+    var sel=document.getElementById('school-select');
+    if(!sel) return;
+    Array.from(sel.options).forEach(function(o){
+        o.selected=selectedSchools.indexOf(o.value)>=0;
+    });
+}
+
+
+
+function showLoading(text){
+
+    var el=document.getElementById(
+        'loading-layer'
+    );
+
+    el.textContent=text;
+
+    el.classList.add('visible');
+
+}
+
+
+function hideLoading(){
+
+    document.getElementById(
+        'loading-layer'
+    ).classList.remove('visible');
+
+}
+
+
+/* ============================================================
+   ESTILOS SEGUROS DAS CAMADAS SOB DEMANDA
+   ============================================================ */
+
+function sectorStyle(fillColor){
+
+    return new ol.style.Style({
+
+        stroke:new ol.style.Stroke({
+            color:'rgba(35,35,35,0.70)',
+            width:1
+        }),
+
+        fill:new ol.style.Fill({
+            color:fillColor
+        })
+
+    });
+
+}
+
+
+/*
+ * A função gerada pelo QGIS para Renda possui um problema:
+ * quando o atributo Renda é nulo, a variável "style" não é
+ * inicializada e a função termina com ReferenceError.
+ *
+ * No arquivo atualmente publicado, as 143 feições de Renda
+ * possuem Renda=null. Por isso usamos uma função própria que
+ * trata explicitamente os valores ausentes.
+ */
+/*
+ * Classificação cartográfica das camadas de Renda e PPI.
+ *
+ * Em vez de uma escala contínua, usamos classes discretas.
+ * Os limites foram definidos a partir da distribuição dos setores
+ * presentes na base, com mais resolução nas faixas baixas.
+ *
+ * Renda: 9 classes.
+ * PPI: 10 classes, com zero em uma classe própria.
+ */
+
+var RENDA_CLASSES=[
+    {max:1000,color:'#eff6ff',label:'Até R$ 1.000'},
+    {max:1300,color:'#dbeafe',label:'R$ 1.001 – 1.300'},
+    {max:1600,color:'#bfdbfe',label:'R$ 1.301 – 1.600'},
+    {max:2000,color:'#93c5fd',label:'R$ 1.601 – 2.000'},
+    {max:2500,color:'#60a5fa',label:'R$ 2.001 – 2.500'},
+    {max:3500,color:'#3b82f6',label:'R$ 2.501 – 3.500'},
+    {max:5000,color:'#2563eb',label:'R$ 3.501 – 5.000'},
+    {max:7500,color:'#1d4ed8',label:'R$ 5.001 – 7.500'},
+    {max:Infinity,color:'#1e3a8a',label:'Acima de R$ 7.500'}
+];
+
+var PPI_CLASSES=[
+    {max:0,color:'#f1f5f9',label:'0 pessoas'},
+    {max:25,color:'#eff6ff',label:'1 – 25 pessoas'},
+    {max:50,color:'#dbeafe',label:'26 – 50 pessoas'},
+    {max:100,color:'#bfdbfe',label:'51 – 100 pessoas'},
+    {max:150,color:'#93c5fd',label:'101 – 150 pessoas'},
+    {max:250,color:'#60a5fa',label:'151 – 250 pessoas'},
+    {max:350,color:'#3b82f6',label:'251 – 350 pessoas'},
+    {max:500,color:'#2563eb',label:'351 – 500 pessoas'},
+    {max:750,color:'#1d4ed8',label:'501 – 750 pessoas'},
+    {max:Infinity,color:'#1e3a8a',label:'Acima de 750 pessoas'}
+];
+
+function classifySectorValue(value,classes){
+    for(var i=0;i<classes.length;i++){
+        if(value<=classes[i].max){
+            return classes[i];
+        }
+    }
+    return classes[classes.length-1];
+}
+
+function safeRendaStyle(feature){
+
+    var value=Number(feature.get('Renda'));
+
+    if(!Number.isFinite(value)){
+        return sectorStyle('rgba(226,232,240,0.45)');
+    }
+
+    return sectorStyle(
+        classifySectorValue(value,RENDA_CLASSES).color
+    );
+}
+
+function safePPIStyle(feature){
+
+    var value=Number(feature.get('PPI'));
+
+    if(!Number.isFinite(value)){
+        return sectorStyle('rgba(226,232,240,0.45)');
+    }
+
+    return sectorStyle(
+        classifySectorValue(value,PPI_CLASSES).color
+    );
+}
+
+
+/* ============================================================
+   CARREGAMENTO DA RENDA
+   ============================================================ */
+
+function createSectorLayers(geojson){
+
+    var format = new ol.format.GeoJSON();
+
+    var features = format.readFeatures(
+        geojson,
+        {
+            dataProjection:'EPSG:4326',
+            featureProjection:'EPSG:3857'
+        }
+    );
+
+    if(!features.length){
+        throw new Error(
+            'O arquivo de setores foi lido, mas não possui feições.'
+        );
+    }
+
+    setoresSource = new ol.source.Vector({
+        features:features
+    });
+
+    /*
+     * As duas camadas usam EXATAMENTE a mesma fonte.
+     * Só muda o atributo utilizado para a coloração.
+     */
+
+    lyr_Renda_1 = new ol.layer.Vector({
+
+        source:setoresSource,
+
+        style:function(feature,resolution){
+            return safeRendaStyle(feature,resolution);
+        },
+
+        title:'Renda',
+
+        zIndex:5,
+
+        visible:false
+
+    });
+
+    lyr_PPI_2 = new ol.layer.Vector({
+
+        source:setoresSource,
+
+        style:function(feature,resolution){
+            return safePPIStyle(feature,resolution);
+        },
+
+        title:'PPI',
+
+        zIndex:5,
+
+        visible:false
+
+    });
+
+    /*
+     * As camadas são adicionadas abaixo dos municípios e,
+     * principalmente, abaixo das escolas.
+     */
+
+    map.addLayer(lyr_Renda_1);
+    map.addLayer(lyr_PPI_2);
+
+    setoresLoaded=true;
+
+    console.log(
+        'Mapa Educacional: setores Renda/PPI carregados:',
+        features.length,
+        'feições.'
+    );
+}
+
+
+function loadSetores(){
+
+    if(setoresLoaded){
+
+        return Promise.resolve();
+
+    }
+
+    if(setoresLoading){
+
+        return setoresLoadingPromise;
+
+    }
+
+    setoresLoading=true;
+
+    console.log(
+        'Mapa Educacional: carregando arquivo único de Renda + PPI...'
+    );
+
+    setoresLoadingPromise =
+        fetch(
+            './layers/setores_renda_ppi.geojson',
+            {
+                cache:'no-store'
+            }
+        )
+        .then(function(response){
+
+            console.log(
+                'Mapa Educacional: resposta setores:',
+                response.status,
+                response.url
+            );
+
+            if(!response.ok){
+
+                throw new Error(
+                    'HTTP ' +
+                    response.status +
+                    ' ao carregar ./layers/setores_renda_ppi.geojson'
+                );
+
+            }
+
+            return response.text();
+
+        })
+        .then(function(text){
+
+            console.log(
+                'Mapa Educacional: arquivo único recebido:',
+                text.length,
+                'caracteres.'
+            );
+
+            var geojson;
+
+            try{
+
+                geojson=JSON.parse(text);
+
+            }catch(error){
+
+                throw new Error(
+                    'O arquivo setores_renda_ppi.geojson não contém JSON válido: ' +
+                    error.message
+                );
+
+            }
+
+            if(
+                !geojson ||
+                geojson.type!=='FeatureCollection' ||
+                !Array.isArray(geojson.features)
+            ){
+
+                throw new Error(
+                    'O arquivo de setores não é um FeatureCollection GeoJSON válido.'
+                );
+
+            }
+
+            createSectorLayers(geojson);
+
+        })
+        .catch(function(error){
+
+            setoresLoaded=false;
+            setoresLoading=false;
+            setoresLoadingPromise=null;
+
+            console.error(
+                'Mapa Educacional: ERRO AO CARREGAR SETORES Renda/PPI:',
+                error
+            );
+
+            throw error;
+
+        });
+
+    return setoresLoadingPromise;
+
+}
+
+
+function applySectorStyles(){
+
+    if(!setoresLoaded){
+
+        return;
+
+    }
+
+    var visibleLayer =
+        state.renda
+            ? lyr_Renda_1
+            : state.ppi
+                ? lyr_PPI_2
+                : null;
+
+    /*
+     * Somente uma camada temática fica visível por vez.
+     * Ambas usam a mesma fonte.
+     */
+
+    lyr_Renda_1.setVisible(
+        state.renda
+    );
+
+    lyr_PPI_2.setVisible(
+        state.ppi
+    );
+
+    /*
+     * O filtro municipal é aplicado sem retirar os dados
+     * dos demais municípios da fonte.
+     */
+
+    var activeStyle =
+        state.renda
+            ? safeRendaStyle
+            : safePPIStyle;
+
+    if(visibleLayer){
+
+        visibleLayer.setStyle(
+            function(feature,resolution){
+
+                return matchesSector(feature)
+                    ? activeStyle(feature,resolution)
+                    : null;
+
+            }
+        );
+
+    }
+
+}
+
+
+function loadRenda(){
+
+    if(state.ppi){
+
+        state.ppi=false;
+
+        if(ppiLoaded && lyr_PPI_2){
+            lyr_PPI_2.setVisible(false);
+        }
+
+        var ppiToggle =
+            document.getElementById('togglePPI');
+
+        if(ppiToggle){
+            ppiToggle.checked=false;
+        }
+
+    }
+
+    if(setoresLoaded){
+
+        state.renda=true;
+        rendaLoaded=true;
+
+        lyr_Renda_1.setVisible(true);
+        lyr_PPI_2.setVisible(false);
+
+        applySectorStyles();
+
+        return;
+
+    }
+
+    if(rendaLoading){
+
+        return;
+
+    }
+
+    rendaLoading=true;
+
+    showLoading(
+        'Carregando setores de Renda e PPI...'
+    );
+
+    loadSetores()
+        .then(function(){
+
+            rendaLoading=false;
+            rendaLoaded=true;
+            ppiLoaded=true;
+
+            state.renda=true;
+
+            lyr_Renda_1.setVisible(true);
+            lyr_PPI_2.setVisible(false);
+
+            applySectorStyles();
+
+            hideLoading();
+
+            console.log(
+                'Mapa Educacional: Renda ativada.'
+            );
+
+        })
+        .catch(function(error){
+
+            rendaLoading=false;
+            rendaLoaded=false;
+
+            state.renda=false;
+
+            hideLoading();
+
+            var toggle =
+                document.getElementById('toggleRenda');
+
+            if(toggle){
+                toggle.checked=false;
+            }
+
+            console.error(
+                'Mapa Educacional: erro ao ativar Renda:',
+                error
+            );
+
+            alert(
+                'Não foi possível carregar a camada de Renda.\n\n' +
+                'Erro: ' +
+                (
+                    error && error.message
+                        ? error.message
+                        : String(error)
+                )
+            );
+
+        });
+
+}
+
+
+function loadPPI(){
+
+    if(state.renda){
+
+        state.renda=false;
+
+        if(rendaLoaded && lyr_Renda_1){
+            lyr_Renda_1.setVisible(false);
+        }
+
+        var rendaToggle =
+            document.getElementById('toggleRenda');
+
+        if(rendaToggle){
+            rendaToggle.checked=false;
+        }
+
+    }
+
+    if(setoresLoaded){
+
+        state.ppi=true;
+        ppiLoaded=true;
+
+        lyr_PPI_2.setVisible(true);
+        lyr_Renda_1.setVisible(false);
+
+        applySectorStyles();
+
+        return;
+
+    }
+
+    if(ppiLoading){
+
+        return;
+
+    }
+
+    ppiLoading=true;
+
+    showLoading(
+        'Carregando setores de Renda e PPI...'
+    );
+
+    loadSetores()
+        .then(function(){
+
+            ppiLoading=false;
+            rendaLoaded=true;
+            ppiLoaded=true;
+
+            state.ppi=true;
+
+            lyr_PPI_2.setVisible(true);
+            lyr_Renda_1.setVisible(false);
+
+            applySectorStyles();
+
+            hideLoading();
+
+            console.log(
+                'Mapa Educacional: PPI ativado.'
+            );
+
+        })
+        .catch(function(error){
+
+            ppiLoading=false;
+            ppiLoaded=false;
+
+            state.ppi=false;
+
+            hideLoading();
+
+            var toggle =
+                document.getElementById('togglePPI');
+
+            if(toggle){
+                toggle.checked=false;
+            }
+
+            console.error(
+                'Mapa Educacional: erro ao ativar PPI:',
+                error
+            );
+
+            alert(
+                'Não foi possível carregar a camada PPI.\n\n' +
+                'Erro: ' +
+                (
+                    error && error.message
+                        ? error.message
+                        : String(error)
+                )
+            );
+
+        });
+
+}
+
+
+/* ============================================================
+   FILTRO DAS ESCOLAS
+   ============================================================ */
+
+function matchesSchool(f){
+
+    var p=f.getProperties();
+
+
+    if(
+        state.etapa &&
+        norm(p.ETAPA)!==
+        state.etapa
+    )
+        return false;
+
+
+    if(
+        state.rede &&
+        norm(p.REDE)!==
+        state.rede
+    )
+        return false;
+
+
+    if(
+        state.municipio &&
+        norm(p.NO_MUNICIPIO)!==
+        state.municipio
+    )
+        return false;
+
+
+    return true;
+
+}
+
+
+/* ============================================================
+   FILTRO DOS SETORES
+   ============================================================ */
+
+function matchesSector(f){
+
+    if(!state.municipio)
+        return true;
+
+
+    var p=f.getProperties();
+
+
+    return (
+
+        norm(p.NM_MUN)===
+        state.municipio
+
+    ) || (
+
+        norm(p.NO_MUNICIPIO)===
+        state.municipio
+
+    );
+
+}
+
+
+/* ============================================================
+   ESTILOS DAS CAMADAS SOB DEMANDA
+   ============================================================ */
+
+function applySectorStyles(){
+
+    if(rendaLoaded){
+
+        lyr_Renda_1.setVisible(
+            state.renda
+        );
+
+
+        lyr_Renda_1.setStyle(
+            function(feature,resolution){
+
+                return matchesSector(
+                    feature
+                )
+                    ? safeRendaStyle(
+                        feature,
+                        resolution
+                    )
+                    : null;
+
+            }
+        );
+
+    }
+
+
+    if(ppiLoaded){
+
+        lyr_PPI_2.setVisible(
+            state.ppi
+        );
+
+
+        lyr_PPI_2.setStyle(
+            function(feature,resolution){
+
+                return matchesSector(
+                    feature
+                )
+                    ? safePPIStyle(
+                        feature,
+                        resolution
+                    )
+                    : null;
+
+            }
+        );
+
+    }
+
+}
+
+
+/* ============================================================
+   ESTILOS GERAIS
+   ============================================================ */
+
+function applyStyles(){
+
+    /* Reforça a hierarquia visual: escolas sempre no topo. */
+    lyr_Municipios_Mato_Grosso_do_Sul_2025_3.setZIndex(20);
+    lyr_MetadeMatemtica_4.setZIndex(30);
+    lyr_MetadePortugus_5.setZIndex(30);
+
+    if(lyr_Renda_1) lyr_Renda_1.setZIndex(5);
+    if(lyr_PPI_2) lyr_PPI_2.setZIndex(5);
+
+    applySectorStyles();
+
+
+    lyr_Municipios_Mato_Grosso_do_Sul_2025_3
+        .setVisible(
+            state.municipios
+        );
+
+
+    var activeStyle=
+        state.indicator==='mat'
+            ? style_MetadeMatemtica_4
+            : style_MetadePortugus_5;
+
+
+    var activeLayer=
+        state.indicator==='mat'
+            ? lyr_MetadeMatemtica_4
+            : lyr_MetadePortugus_5;
+
+
+    var inactiveLayer=
+        state.indicator==='mat'
+            ? lyr_MetadePortugus_5
+            : lyr_MetadeMatemtica_4;
+
+
+    inactiveLayer.setVisible(false);
+
+
+    activeLayer.setVisible(true);
+
+
+    activeLayer.setStyle(
+        function(feature,resolution){
+
+            if(!state.etapa){
+                return null;
+            }
+
+            return matchesSchool(feature)
+                ? activeStyle(feature,resolution)
+                : null;
+
+        }
+    );
+
+    updateStageMessage();
+    updatePerformanceLegend();
+
+    lyr_Municipios_Mato_Grosso_do_Sul_2025_3
+        .setStyle(function(feature){
+
+            var p=
+                feature.getProperties();
+
+
+            var selected=
+                state.municipio &&
+                norm(p.NM_MUN)===
+                state.municipio;
+
+
+            if(
+                state.municipio &&
+                !selected
+            )
+                return null;
+
+
+            return new ol.style.Style({
+
+                stroke:new ol.style.Stroke({
+
+                    color:selected
+                        ? 'rgba(37,99,235,1)'
+                        : 'rgba(255,255,255,.9)',
+
+                    width:selected
+                        ? 4
+                        : 1.5
+
+                }),
+
+                fill:new ol.style.Fill({
+
+                    color:selected
+                        ? 'rgba(37,99,235,.06)'
+                        : 'rgba(0,0,0,0)'
+
+                })
+
+            });
+
+        });
+
+
+    updateSchoolSelect();
+
+    updateCount();
+
+}
+
+
+/* ============================================================
+   ESCOLA SELECT
+   ============================================================ */
+
+function updateSchoolSelect(){
+
+    var sel=document.getElementById('school-select');
+
+    var candidates=schoolFeatures
+        .filter(function(f){
+            var p=f.getProperties();
+
+            if(!state.etapa) return false;
+
+            if(norm(p.ETAPA)!==state.etapa) return false;
+            if(state.rede && norm(p.REDE)!==state.rede) return false;
+            if(state.municipio && norm(p.NO_MUNICIPIO)!==state.municipio) return false;
+
+            return true;
+        })
+        .sort(function(a,b){
+            var an=norm(a.get('NO_ESCOLA'));
+            var bn=norm(b.get('NO_ESCOLA'));
+            return an.localeCompare(bn,'pt-BR');
+        });
+
+    var seen={};
+    var opts=[];
+
+    candidates.forEach(function(f){
+        var key=schoolKey(f);
+        if(!seen[key]){
+            seen[key]=true;
+            opts.push({
+                name:norm(f.get('NO_ESCOLA')),
+                id:norm(f.get('ID_ESCOLA')),
+                etapa:norm(f.get('ETAPA')),
+                key:key
+            });
+        }
+    });
+
+    if(!state.etapa){
+        sel.innerHTML='<option value="" disabled>Selecione uma etapa primeiro</option>';
+        sel.disabled=true;
+        document.getElementById('school-count').textContent='0 escolas visíveis';
+        return;
+    }
+
+    sel.disabled=false;
+    sel.innerHTML=opts.map(function(o){
+        return '<option value="'+esc(o.key)+'">'+
+            esc(o.name)+' — '+esc(o.etapa)+'</option>';
+    }).join('');
+
+    syncSchoolSelect();
+}
+
+function updateStageMessage(){
+    var el=document.getElementById('stage-message');
+    if(el) el.classList.toggle('hidden',!!state.etapa);
+}
+
+function cutoffFor(indicator,etapa){
+    var cuts={
+        port:{'Anos Iniciais':200,'Anos Finais':275,'Ensino Médio':300},
+        mat:{'Anos Iniciais':225,'Anos Finais':300,'Ensino Médio':350}
+    };
+    return cuts[indicator][etapa] || null;
+}
+
+function updatePerformanceLegend(){
+    var el=document.getElementById('performance-legend');
+    if(!el) return;
+    var cut=cutoffFor(state.indicator,state.etapa);
+    var label=state.indicator==='mat'?'Matemática':'Português';
+
+    if(!state.etapa || !cut){
+        el.innerHTML='<div style="color:#94a3b8">Selecione uma etapa para exibir o ponto de corte.</div>';
+        return;
+    }
+
+    el.innerHTML=
+        '<div style="margin-bottom:5px"><b>'+label+'</b> · '+esc(state.etapa)+'</div>'+
+        '<div class="legend-row"><span class="legend-dot green"></span> Acima do corte: <b>&gt; '+fmt(cut)+'</b></div>'+
+        '<div class="legend-row"><span class="legend-dot red"></span> Abaixo ou igual ao corte: <b>≤ '+fmt(cut)+'</b></div>'+
+        '<div class="legend-row"><span class="legend-dot gray"></span> Sem informação</div>';
+}
+
+function updateMapLegend(){
+    var el=document.getElementById('map-legend');
+    if(!el) return;
+
+    var active=state.renda?'renda':state.ppi?'ppi':null;
+    if(!active){
+        el.classList.remove('visible');
+        return;
+    }
+
+    var title=active==='renda'
+        ? 'Renda média do setor'
+        : 'População PPI do setor';
+
+    var classes=active==='renda'
+        ? RENDA_CLASSES
+        : PPI_CLASSES;
+
+    var htmlLegend=
+        '<div class="map-legend-title">'+title+'</div>'+
+        '<div class="map-legend-subtitle">'+
+            (active==='renda'
+                ? 'R$ por mês · classes com maior detalhe nas faixas de menor renda'
+                : 'Número de pessoas · zero possui classe própria')+
+        '</div>'+
+        '<div class="map-legend-classes">';
+
+    classes.forEach(function(item){
+        htmlLegend+=
+            '<div class="map-legend-class">'+
+                '<span class="map-legend-swatch" style="background:'+item.color+'"></span>'+
+                '<span>'+item.label+'</span>'+
+            '</div>';
+    });
+
+    htmlLegend+=
+        '</div>'+
+        '<div class="map-legend-hint">Clique em um setor para ver os valores exatos de Renda e PPI.</div>';
+
+    el.innerHTML=htmlLegend;
+    el.classList.add('visible');
+}
+
+
+/* ============================================================
+   CONTADOR
+   ============================================================ */
+
+function updateCount(){
+
+    var visible=
+        state.etapa
+            ? schoolFeatures.filter(matchesSchool)
+            : [];
+
+
+    document.getElementById(
+        'school-count'
+    ).textContent=
+        visible.length+
+        ' escola'+
+        (
+            visible.length===1
+                ? ''
+                : 's'
+        );
+
+}
+
+
+/* ============================================================
+   FILTROS
+   ============================================================ */
+
+function fillMunicipios(){
+
+    var names=
+        uniqueSorted(
+            munFeatures.map(
+                function(f){
+
+                    return norm(
+                        f.get('NM_MUN')
+                    );
+
+                }
+            )
+        );
+
+
+    document.getElementById(
+        'municipio-select'
+    ).innerHTML=
+        optionHTML(
+            names,
+            'Todos os municípios'
+        );
+
+}
+
+
+function fillEtapas(){
+
+    var names=uniqueSorted(
+        schoolFeatures.map(function(f){
+            return norm(f.get('ETAPA'));
+        })
+    );
+
+    document.getElementById('etapa-select').innerHTML=
+        '<option value="">Selecione uma etapa</option>'+
+        names.map(function(x){
+            return '<option value="'+esc(x)+'">'+esc(x)+'</option>';
+        }).join('');
+}
+
+
+function fillRedes(){
+
+    var names=
+        uniqueSorted(
+            schoolFeatures.map(
+                function(f){
+
+                    return norm(
+                        f.get('REDE')
+                    );
+
+                }
+            )
+        );
+
+
+    document.getElementById(
+        'rede-select'
+    ).innerHTML=
+        optionHTML(
+            names,
+            'Todas as redes'
+        );
+
+}
+
+
+/* ============================================================
+   MUNICÍPIO
+   ============================================================ */
+
+function selectMunicipio(name){
+
+    state.municipio=name;
+    clearSchoolSelection();
+
+
+    if(name){
+
+        var f=
+            munFeatures.find(
+                function(x){
+
+                    return norm(
+                        x.get('NM_MUN')
+                    )===name;
+
+                }
+            );
+
+
+        if(f){
+
+            map.getView().fit(
+                f.getGeometry().getExtent(),
+                {
+                    padding:[
+                        90,
+                        390,
+                        90,
+                        40
+                    ],
+                    maxZoom:11,
+                    duration:700
+                }
+            );
+
+        }
+
+    }else{
+
+        map.getView().fit(
+
+            ol.extent.boundingExtent(
+
+                munFeatures.map(
+                    function(f){
+
+                        return f
+                            .getGeometry()
+                            .getExtent();
+
+                    }
+                )
+
+            ),
+
+            {
+                padding:[
+                    100,
+                    380,
+                    70,
+                    40
+                ],
+
+                maxZoom:8,
+
+                duration:700
+
+            }
+
+        );
+
+    }
+
+
+    applyStyles();
+
+}
+
+
+/* ============================================================
+   ESCOLA
+   ============================================================ */
+
+function selectSchool(key){
+
+    var f=schoolFeatures.find(function(x){
+        return schoolKey(x)===key;
+    });
+
+    if(f){
+        var idx=selectedSchools.indexOf(key);
+        if(idx<0) selectedSchools.push(key);
+
+        state.escola=selectedSchools.length===1
+            ? norm(f.get('ID_ESCOLA'))
+            : '';
+
+        map.getView().animate({
+            center:f.getGeometry().getCoordinates(),
+            zoom:15,
+            duration:700
+        });
+
+        highlightSelectedFeatures();
+        syncSchoolSelect();
+        showPopup(getSelectedSchoolFeatures());
+    }
+
+    applyStyles();
+}
+
+
+/* ============================================================
+   DESTAQUE DA ESCOLA
+   ============================================================ */
+
+var selectedSource=
+    new ol.source.Vector();
+
+
+var selectedLayer=
+    new ol.layer.Vector({
+
+        source:selectedSource,
+
+        zIndex:100,
+
+        style:new ol.style.Style({
+
+            image:new ol.style.Circle({
+
+                radius:12,
+
+                fill:new ol.style.Fill({
+
+                    color:
+                        'rgba(37,99,235,.18)'
+
+                }),
+
+                stroke:new ol.style.Stroke({
+
+                    color:'#fff',
+
+                    width:3
+
+                })
+
+            })
+
+        })
+
+    });
+
+
+map.addLayer(
+    selectedLayer
+);
+
+
+function highlightSelectedFeatures(){
+
+    selectedSource.clear();
+
+    getSelectedSchoolFeatures().forEach(function(f){
+        selectedSource.addFeature(f.clone());
+    });
+}
+
+
+/* ============================================================
+   FORMATAÇÃO
+   ============================================================ */
+
+function fmt(v){
+
+    if(
+        v===null ||
+        v===undefined ||
+        v==='' ||
+        v==='-' ||
+        v==='ND'
+    )
+        return '—';
+
+
+    var n=
+        Number(
+            String(v).replace(',','.')
+        );
+
+
+    return Number.isFinite(n)
+        ? n.toLocaleString(
+            'pt-BR',
+            {
+                maximumFractionDigits:2
+            }
+        )
+        : esc(v);
+
+}
+
+
+function boolPill(v){
+
+    var x=
+        norm(v).toLowerCase();
+
+
+    if(!x)
+        return '<span class="pill missing">SN</span>';
+
+
+    return x==='sim'
+        ? '<span class="pill yes">Sim</span>'
+        : '<span class="pill no">Não</span>';
+
+}
+
+
+/* ============================================================
+   POPUP ESCOLA
+   ============================================================ */
+
+function showPopup(features){
+
+    features=Array.isArray(features)?features:[features];
+    if(!features.length) return;
+
+    var body=document.getElementById('popup-body');
+
+    body.innerHTML=
+        '<div class="popup-type">ESCOLAS SELECIONADAS</div>'+
+        '<div class="selection-note">'+features.length+
+        (features.length===1?' escola selecionada':' escolas selecionadas')+
+        '. Selecione outras no mapa ou no menu para comparar.</div>';
+
+    features.forEach(function(f){
+        var p=f.getProperties();
+        var title=norm(p.NO_ESCOLA)||'Escola';
+        var etapa=norm(p.ETAPA);
+        var cutPort=cutoffFor('port',etapa);
+        var cutMat=cutoffFor('mat',etapa);
+        var notaPort=Number(p.VL_NOTA_PORTUGUES_2025);
+        var notaMat=Number(p.VL_NOTA_MATEMATICA_2025);
+
+        function adequacao(nota,cut){
+            if(!Number.isFinite(nota)||!cut)
+                return '<span class="pill missing">Sem informação</span>';
+            return nota>cut
+                ? '<span class="pill yes">Adequado</span>'
+                : '<span class="pill no">Abaixo do adequado</span>';
+        }
+
+        var card=
+            '<div class="school-card">'+
+            '<div class="popup-type">ESCOLA</div>'+
+            '<h3>'+esc(title)+'</h3>'+
+            '<div class="popup-grid">'+
+            '<div><b>Município</b><span>'+esc(norm(p.NO_MUNICIPIO))+'</span></div>'+
+            '<div><b>Rede</b><span>'+esc(norm(p.REDE))+'</span></div>'+
+            '<div><b>Etapa</b><span>'+esc(etapa)+'</span></div>'+
+            '<div><b>ID</b><span>'+esc(norm(p.ID_ESCOLA))+'</span></div>'+
+            '<div><b>Português</b><span>'+fmt(p.VL_NOTA_PORTUGUES_2025)+'</span></div>'+
+            '<div><b>Resultado</b><span>'+adequacao(notaPort,cutPort)+'</span></div>'+
+            '<div><b>Matemática</b><span>'+fmt(p.VL_NOTA_MATEMATICA_2025)+'</span></div>'+
+            '<div><b>Resultado</b><span>'+adequacao(notaMat,cutMat)+'</span></div>'+
+            '<div><b>Indicador de rendimento 2025</b><span>'+fmt(p.VL_INDICADOR_REND_2025)+'</span></div>'+
+            '<div><b>Ideb observado 2025</b><span>'+fmt(p.VL_OBSERVADO_2025)+'</span></div>'+
+            '</div></div>';
+
+        body.insertAdjacentHTML('beforeend',card);
+    });
+
+    var popup=document.getElementById('custom-popup');
+    popup.classList.add('visible','multi-school');
+}
+
+
+/* ============================================================
+   POPUP SETOR
+   ============================================================ */
+
+function showSectorPopup(f){
+
+    var p=f.getProperties();
+
+    function fmtMoney(v){
+        var n=Number(v);
+        return Number.isFinite(n)
+            ? n.toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:2})
+            : '—';
+    }
+
+    function fmtPeople(v){
+        var n=Number(v);
+        return Number.isFinite(n)
+            ? n.toLocaleString('pt-BR',{maximumFractionDigits:0})+' pessoas'
+            : '—';
+    }
+
+    document.getElementById('popup-body').innerHTML=
+        '<div class="popup-type">SETOR CENSITÁRIO</div>'+
+        '<h3>'+esc(norm(p.NM_MUN)||'Setor censitário')+'</h3>'+
+        '<div class="popup-grid">'+
+        '<div><b>Município</b><span>'+esc(norm(p.NM_MUN))+'</span></div>'+
+        '<div><b>Código do setor</b><span>'+esc(norm(p.CD_SETOR))+'</span></div>'+
+        '<div><b>Renda média do setor</b><span>'+fmtMoney(p.Renda)+'</span></div>'+
+        '<div><b>População PPI</b><span>'+fmtPeople(p.PPI)+'</span></div>'+
+        '</div>';
+
+    document.getElementById('custom-popup').classList.remove('multi-school');
+    document.getElementById('custom-popup').classList.add('visible');
+}
+
+
+/* ============================================================
+   CLIQUE NO MAPA
+   ============================================================ */
+
+map.on(
+    'singleclick',
+    function(evt){
+
+        var hit=false;
+
+
+        map.forEachFeatureAtPixel(
+            evt.pixel,
+
+            function(feature,layer){
+
+                if(hit)
+                    return;
+
+
+                if(layer===selectedLayer)
+                    return;
+
+
+                if(
+                    layer===lyr_MetadePortugus_5 ||
+                    layer===lyr_MetadeMatemtica_4
+                ){
+
+                    toggleSchoolSelection(feature);
+                    hit=true;
+
+                }
+
+
+                else if(
+                    rendaLoaded &&
+                    layer===lyr_Renda_1
+                ){
+
+                    showSectorPopup(
+                        feature
+                    );
+
+                    hit=true;
+
+                }
+
+
+                else if(
+                    ppiLoaded &&
+                    layer===lyr_PPI_2
+                ){
+
+                    showSectorPopup(
+                        feature
+                    );
+
+                    hit=true;
+
+                }
+
+            },
+
+            {
+                hitTolerance:5
+            }
+
+        );
+
+    }
+);
+
+
+/* ============================================================
+   EVENTOS DOS FILTROS
+   ============================================================ */
+
+document.getElementById(
+    'etapa-select'
+).addEventListener(
+    'change',
+    function(){
+
+        state.etapa=this.value;
+        clearSchoolSelection();
+        applyStyles();
+
+    }
+);
+
+
+document.getElementById(
+    'rede-select'
+).addEventListener(
+    'change',
+    function(){
+
+        state.rede=this.value;
+        clearSchoolSelection();
+        applyStyles();
+
+    }
+);
+
+
+document.getElementById(
+    'municipio-select'
+).addEventListener(
+    'change',
+    function(){
+
+        selectMunicipio(
+            this.value
+        );
+
+    }
+);
+
+
+document.getElementById(
+    'school-select'
+).addEventListener(
+    'change',
+    function(){
+
+        selectedSchools=Array.from(this.selectedOptions)
+            .map(function(o){return o.value;});
+
+        var features=getSelectedSchoolFeatures();
+
+        state.escola=features.length===1
+            ? norm(features[0].get('ID_ESCOLA'))
+            : '';
+
+        highlightSelectedFeatures();
+
+        if(features.length){
+            var f=features[features.length-1];
+            map.getView().animate({
+                center:f.getGeometry().getCoordinates(),
+                zoom:15,
+                duration:500
+            });
+            showPopup(features);
+        }else{
+            document.getElementById('custom-popup').classList.remove('visible','multi-school');
+        }
+
+        applyStyles();
+
+    }
+);
+
+document.getElementById('cutoff-info-close').addEventListener('click',function(){
+    document.getElementById('cutoff-info-popup').classList.remove('visible');
+});
+
+
+/* ============================================================
+   CONTROLES DOS INDICADORES E CAMADAS
+   ============================================================ */
+
+window.setIndicatorButtons = function setIndicatorButtons(){
+    var port=document.getElementById('indicator-port');
+    var mat=document.getElementById('indicator-mat');
+    if(port) port.classList.toggle('active',state.indicator==='port');
+    if(mat) mat.classList.toggle('active',state.indicator==='mat');
+    if(typeof updatePerformanceLegend === 'function') updatePerformanceLegend();
+};
+
+document.getElementById('indicator-port').addEventListener('click',function(){
+    state.indicator='port';
+    window.setIndicatorButtons();
+    applyStyles();
+});
+
+document.getElementById('indicator-mat').addEventListener('click',function(){
+    state.indicator='mat';
+    window.setIndicatorButtons();
+    applyStyles();
+});
+
+document.getElementById('toggle-renda').addEventListener('click',function(){
+    if(state.renda){
+        state.renda=false;
+        if(lyr_Renda_1) lyr_Renda_1.setVisible(false);
+    }else{
+        loadRenda();
+    }
+    this.classList.toggle('active',state.renda);
+    document.getElementById('toggle-ppi').classList.toggle('active',state.ppi);
+    updateMapLegend();
+});
+
+document.getElementById('toggle-ppi').addEventListener('click',function(){
+    if(state.ppi){
+        state.ppi=false;
+        if(lyr_PPI_2) lyr_PPI_2.setVisible(false);
+    }else{
+        loadPPI();
+    }
+    this.classList.toggle('active',state.ppi);
+    document.getElementById('toggle-renda').classList.toggle('active',state.renda);
+    updateMapLegend();
+});
+
+document.getElementById('toggle-municipios').addEventListener('click',function(){
+    state.municipios=!state.municipios;
+    this.classList.toggle('active',state.municipios);
+    applyStyles();
+});
+
+document.getElementById('info-cutoff').addEventListener('click',function(){
+    document.getElementById('cutoff-info-popup').classList.add('visible');
+});
+
+document.getElementById('popup-close').addEventListener('click',function(){
+    document.getElementById('custom-popup').classList.remove('visible','multi-school');
+    clearSchoolSelection();
+});
+
+document.getElementById('close-panel').addEventListener('click',function(){
+    document.getElementById('control-panel').classList.add('collapsed');
+    document.getElementById('open-panel').classList.add('visible');
+});
+
+document.getElementById('open-panel').addEventListener('click',function(){
+    document.getElementById('control-panel').classList.remove('collapsed');
+    this.classList.remove('visible');
+});
+
+document.getElementById('reset-btn').addEventListener('click',function(){
+    state={
+        etapa:'',
+        rede:'',
+        municipio:'',
+        indicator:'port',
+        renda:false,
+        ppi:false,
+        municipios:true
+    };
+    clearSchoolSelection();
+    document.getElementById('etapa-select').value='';
+    document.getElementById('rede-select').value='';
+    document.getElementById('municipio-select').value='';
+    document.getElementById('toggle-renda').classList.remove('active');
+    document.getElementById('toggle-ppi').classList.remove('active');
+    document.getElementById('toggle-municipios').classList.add('active');
+    if(lyr_Renda_1) lyr_Renda_1.setVisible(false);
+    if(lyr_PPI_2) lyr_PPI_2.setVisible(false);
+    window.setIndicatorButtons();
+    updateStageMessage();
+    updateMapLegend();
+    applyStyles();
+    document.getElementById('custom-popup').classList.remove('visible','multi-school');
+    map.getView().fit(
+        ol.extent.boundingExtent(munFeatures.map(function(f){return f.getGeometry().getExtent();})),
+        {padding:[100,380,70,40],maxZoom:8,duration:700}
+    );
+});
+
+/* Mantém a legenda sincronizada depois que Renda/PPI terminam de carregar. */
+var originalApplySectorStyles=applySectorStyles;
+applySectorStyles=function(){
+    originalApplySectorStyles();
+    updateMapLegend();
+    var rendaBtn=document.getElementById('toggle-renda');
+    var ppiBtn=document.getElementById('toggle-ppi');
+    if(rendaBtn) rendaBtn.classList.toggle('active',!!state.renda);
+    if(ppiBtn) ppiBtn.classList.toggle('active',!!state.ppi);
+};
+
+/* ============================================================
+   INICIALIZAÇÃO
+   ============================================================ */
+
+fillMunicipios();
+
+fillEtapas();
+
+fillRedes();
+
+window.setIndicatorButtons();
+updateStageMessage();
+updatePerformanceLegend();
+updateMapLegend();
+
+applyStyles();
+
+
+/*
+   IMPORTANTE:
+
+   O mapa começa somente com:
+
+   ✓ Google Satellite
+   ✓ Municípios
+   ✓ Escolas
+
+   Renda e PPI NÃO são carregadas aqui.
+*/
+
+
+setTimeout(
+    function(){
+
+        map.getView().fit(
+
+            ol.extent.boundingExtent(
+
+                munFeatures.map(
+                    function(f){
+
+                        return f
+                            .getGeometry()
+                            .getExtent();
+
+                    }
+                )
+
+            ),
+
+            {
+                padding:[
+                    100,
+                    380,
+                    70,
+                    40
+                ],
+
+                maxZoom:8
+
+            }
+
+        );
+
+    },
+    100
+);
+
+
+
+/* ============================================================
+   MELHORIAS ANALÍTICAS — IMPLEMENTAÇÃO INTEGRADA
+   ============================================================ */
+(function(){
+    function numeric(v){
+        if(v===null || v===undefined || v==='' || v==='-' || v==='ND') return null;
+        var raw=String(v).trim().replace(',','.');
+        if(!raw || raw==='-') return null;
+        var n=Number(raw);
+        return Number.isFinite(n)?n:null;
+    }
+    function selectedIndicatorValue(obj){
+        var p=obj && typeof obj.getProperties==='function'?obj.getProperties():obj;
+        return numeric(state.indicator==='mat'?p.VL_NOTA_MATEMATICA_2025:p.VL_NOTA_PORTUGUES_2025);
+    }
+    function performanceStatus(f){
+        var p=f.getProperties(), value=selectedIndicatorValue(p), cut=cutoffFor(state.indicator,norm(p.ETAPA));
+        if(value===null || !cut) return 'missing';
+        return value>cut?'above':'below';
+    }
+    function hasIdeb(f){ return numeric(f.get('VL_OBSERVADO_2025'))!==null; }
+
+    var originalMatchesSchool=matchesSchool;
+    matchesSchool=function(f){
+        if(!originalMatchesSchool(f)) return false;
+        var p=f.getProperties();
+        var search=norm(document.getElementById('school-search')&&document.getElementById('school-search').value).toLocaleLowerCase('pt-BR');
+        if(search && (norm(p.NO_ESCOLA)+' '+norm(p.NO_MUNICIPIO)).toLocaleLowerCase('pt-BR').indexOf(search)<0) return false;
+        var pf=(document.getElementById('performance-filter')||{}).value||'all';
+        if(pf!=='all' && performanceStatus(f)!==pf) return false;
+        var df=(document.getElementById('data-filter')||{}).value||'all';
+        if(df==='with' && !hasIdeb(f)) return false;
+        if(df==='without' && hasIdeb(f)) return false;
+        return true;
+    };
+
+    updateSchoolSelect=function(){
+        var sel=document.getElementById('school-select');
+        if(!sel) return;
+        var candidates=schoolFeatures.filter(function(f){
+            if(!state.etapa) return false;
+            if(norm(f.get('ETAPA'))!==state.etapa) return false;
+            if(state.rede && norm(f.get('REDE'))!==state.rede) return false;
+            if(state.municipio && norm(f.get('NO_MUNICIPIO'))!==state.municipio) return false;
+            return matchesSchool(f);
+        }).sort(function(a,b){return norm(a.get('NO_ESCOLA')).localeCompare(norm(b.get('NO_ESCOLA')),'pt-BR');});
+        if(!state.etapa){sel.innerHTML='<option value="" disabled>Selecione uma etapa primeiro</option>';sel.disabled=true;return;}
+        sel.disabled=false;
+        var seen={}, opts=[];
+        candidates.forEach(function(f){var key=schoolKey(f);if(!seen[key]){seen[key]=true;opts.push(f);}});
+        sel.innerHTML=opts.map(function(f){return '<option value="'+esc(schoolKey(f))+'">'+esc(norm(f.get('NO_ESCOLA')))+' — '+esc(norm(f.get('REDE'))||'Rede não informada')+'</option>';}).join('')||'<option disabled>Nenhuma escola encontrada</option>';
+        syncSchoolSelect();
+    };
+
+    function median(values){
+        var a=values.filter(function(v){return v!==null;}).sort(function(x,y){return x-y;});
+        if(!a.length) return null;
+        var m=Math.floor(a.length/2); return a.length%2?a[m]:(a[m-1]+a[m])/2;
+    }
+    function pct(value,total){return total?Math.round(value*100/total):0;}
+    function findContext(feature){
+        if(!setoresLoaded || !setoresSource) return null;
+        var coord=feature.getGeometry().getCoordinates(), found=null;
+        setoresSource.forEachFeatureInExtent(ol.extent.buffer(feature.getGeometry().getExtent(),0.01),function(s){
+            if(found) return;
+            var g=s.getGeometry();
+            if(g && g.intersectsCoordinate(coord)) found=s;
+        });
+        return found;
+    }
+    function contextHtml(feature){
+        var s=findContext(feature);
+        if(!s) return '<div class="context-box"><b>Contexto territorial</b><div class="insight-note">Ative a camada Renda ou PPI para carregar os dados territoriais e consultar o setor da escola.</div></div>';
+        var p=s.getProperties(), r=numeric(p.Renda), people=numeric(p.PPI);
+        return '<div class="context-box"><b>Contexto territorial aproximado</b><div class="insight-note">Setor de '+esc(norm(p.NM_MUN))+' · Renda: '+(r===null?'—':r.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}))+' · PPI: '+(people===null?'—':people.toLocaleString('pt-BR'))+' pessoas. O setor é uma aproximação espacial do entorno, não representa necessariamente todas as famílias atendidas.</div></div>';
+    }
+    function buildSummary(){
+        var visible=state.etapa?schoolFeatures.filter(matchesSchool):[];
+        var values=visible.map(selectedIndicatorValue).filter(function(v){return v!==null;});
+        var above=visible.filter(function(f){return performanceStatus(f)==='above';}).length;
+        var avg=values.length?values.reduce(function(a,b){return a+b;},0)/values.length:null;
+        var med=median(values), selected=getSelectedSchoolFeatures();
+        var title=state.municipio?(state.municipio+' · '+(state.etapa||'todas as etapas')):'Resumo da seleção';
+        document.getElementById('insight-title').textContent=title;
+        if(!state.etapa){return '<div class="insight-note">Selecione uma etapa para gerar estatísticas. Os números respeitam município, rede, busca e filtros ativos.</div>';}
+        var html='<div class="insight-grid">'+
+            '<div class="insight-card"><b>Escolas visíveis</b><strong>'+visible.length+'</strong></div>'+
+            '<div class="insight-card"><b>Com indicador</b><strong>'+values.length+'</strong></div>'+
+            '<div class="insight-card"><b>Média '+(state.indicator==='mat'?'Matemática':'Português')+'</b><strong>'+fmt(avg)+'</strong></div>'+
+            '<div class="insight-card"><b>Mediana</b><strong>'+fmt(med)+'</strong></div></div>'+
+            '<div class="insight-row"><div class="insight-row-head"><span>Acima do corte</span><b>'+above+' ('+pct(above,values.length)+'%)</b></div><div class="insight-bar"><span style="width:'+pct(above,values.length)+'%"></span></div></div>';
+        if(selected.length){
+            html+='<div class="insight-row"><b>Comparação com a seleção</b></div>';
+            selected.forEach(function(f){var v=selectedIndicatorValue(f);var delta=v!==null&&avg!==null?v-avg:null;html+='<div class="insight-row"><div class="insight-row-head"><span>'+esc(norm(f.get('NO_ESCOLA'))).slice(0,38)+'</span><b>'+fmt(v)+(delta===null?'':' · '+(delta>=0?'+':'')+fmt(delta))+'</b></div></div>';});
+            html+='<div class="insight-note">A diferença ao lado de cada escola é em relação à média das escolas visíveis, não é uma medida causal.</div>';
+        }
+        return html+'<div class="insight-note">Indicador exibido: '+(state.indicator==='mat'?'Matemática':'Português')+' · '+esc(state.etapa)+' · '+visible.length+' registros no grupo atual.</div>';
+    }
+    function refreshInsights(){
+        var panel=document.getElementById('insight-panel');
+        if(!panel) return;
+        if(panel.classList.contains('visible')) document.getElementById('insight-content').innerHTML=buildSummary();
+    }
+    function openInsights(){
+        document.getElementById('insight-panel').classList.add('visible');
+        document.getElementById('insight-content').innerHTML=buildSummary();
+    }
+    function exportCsv(){
+        var rows=state.etapa?schoolFeatures.filter(matchesSchool):[];
+        if(!rows.length){alert('Selecione uma etapa e ajuste os filtros antes de exportar.');return;}
+        var cols=['ID_ESCOLA','NO_ESCOLA','NO_MUNICIPIO','ETAPA','REDE','VL_NOTA_PORTUGUES_2025','VL_NOTA_MATEMATICA_2025','VL_INDICADOR_REND_2025','VL_OBSERVADO_2025','META_PORT','META_MAT'];
+        var csv='sep=;\n'+cols.join(';')+'\n'+rows.map(function(f){return cols.map(function(c){return '"'+String(f.get(c)===undefined?'':f.get(c)).replace(/"/g,'""')+'"';}).join(';');}).join('\n');
+        var blob=new Blob(['\\ufeff'+csv],{type:'text/csv;charset=utf-8;'}), url=URL.createObjectURL(blob), a=document.createElement('a');
+        a.href=url;a.download='mapa-educacional-selecao.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+    }
+    function shareFilters(){
+        var params=new URLSearchParams({municipio:state.municipio||'',etapa:state.etapa||'',rede:state.rede||'',indicador:state.indicator||'port'});
+        var url=location.href.split('?')[0]+'?'+params.toString();
+        if(navigator.clipboard){navigator.clipboard.writeText(url).then(function(){alert('Link com os filtros copiado.');});}else{prompt('Copie este link:',url);}
+    }
+
+    var originalShowPopup=showPopup;
+    showPopup=function(features){
+        originalShowPopup(features);
+        features=Array.isArray(features)?features:[features];
+        if(features.length===1){
+            var body=document.getElementById('popup-body');
+            body.insertAdjacentHTML('beforeend',contextHtml(features[0]));
+        }
+    };
+    var originalUpdateCount=updateCount;
+    updateCount=function(){originalUpdateCount();refreshInsights();};
+    var originalApplyStyles2=applyStyles;
+    applyStyles=function(){originalApplyStyles2();refreshInsights();};
+
+    document.getElementById('school-search').addEventListener('input',function(){clearSchoolSelection();applyStyles();});
+    document.getElementById('performance-filter').addEventListener('change',function(){clearSchoolSelection();applyStyles();});
+    document.getElementById('data-filter').addEventListener('change',function(){clearSchoolSelection();applyStyles();});
+    document.getElementById('insights-btn').addEventListener('click',openInsights);
+    document.getElementById('insight-close').addEventListener('click',function(){document.getElementById('insight-panel').classList.remove('visible');});
+    document.getElementById('export-btn').addEventListener('click',exportCsv);
+    document.getElementById('share-btn').addEventListener('click',shareFilters);
+    document.getElementById('methodology-btn').addEventListener('click',function(){document.getElementById('methodology-popup').classList.add('visible');});
+    document.getElementById('methodology-close').addEventListener('click',function(){document.getElementById('methodology-popup').classList.remove('visible');});
+    document.getElementById('methodology-popup').addEventListener('click',function(e){if(e.target===this)this.classList.remove('visible');});
+
+    var params=new URLSearchParams(location.search);
+    ['municipio','etapa','rede'].forEach(function(k){if(params.get(k)){state[k]=params.get(k);var el=document.getElementById(k+'-select');if(el)el.value=params.get(k);}});
+    if(params.get('indicador')){state.indicator=params.get('indicador');}
+    var initialMunicipio=state.municipio;
+    if(initialMunicipio){selectMunicipio(initialMunicipio);}else{applyStyles();}
+    window.setIndicatorButtons();
+})();
+
+})();
+
+</script>
+
+</body>
+</html>
