@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Mapa Educacional — MS | Contexto e Desempenho</title>
+<link rel="stylesheet" href="./resources/ol.css">
+<link rel="stylesheet" href="./resources/fontawesome-all.min.css">
+<style>
+:root{--navy:#0f172a;--blue:#2563eb;--blue2:#1d4ed8;--muted:#64748b;--line:#e2e8f0;--soft:#f8fafc;--panel:rgba(255,255,255,.98);--green:#16a34a;--red:#dc2626;--amber:#d97706;--shadow:0 18px 50px rgba(15,23,42,.18)}
+*{box-sizing:border-box}html,body,#map{width:100%;height:100%;margin:0;padding:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}body{overflow:hidden;background:#e2e8f0;color:var(--navy)}#map{position:fixed;inset:0}.ol-control{background:transparent!important;padding:0!important}.ol-control button{background:rgba(255,255,255,.95)!important;color:#0f172a!important;border:1px solid rgba(226,232,240,.95)!important;box-shadow:0 6px 18px rgba(15,23,42,.12);border-radius:10px!important;margin:3px;width:34px;height:34px;font-size:18px}.ol-zoom{top:auto;left:auto;right:18px;bottom:74px}.ol-scale-line{left:18px;bottom:18px;background:rgba(255,255,255,.9)!important;padding:4px 7px;border-radius:7px}.ol-scale-line-inner{border-color:#334155;color:#334155}
+#map-title{position:fixed;z-index:20;left:20px;top:18px;background:rgba(15,23,42,.94);color:#fff;border-radius:15px;padding:12px 17px;box-shadow:var(--shadow)}#map-title .eyebrow{font-size:10px;font-weight:900;letter-spacing:.15em;opacity:.7}#map-title strong{display:block;font-size:18px;line-height:1.2;margin-top:2px}#map-title small{display:block;font-size:11px;color:#cbd5e1;margin-top:4px}
+#control-panel{position:fixed;z-index:30;top:18px;right:18px;width:350px;max-height:calc(100vh - 36px);overflow:auto;background:var(--panel);border:1px solid rgba(255,255,255,.75);border-radius:18px;box-shadow:var(--shadow);padding:17px}#control-panel.collapsed{display:none}.panel-head{display:flex;justify-content:space-between;gap:10px;margin-bottom:14px}.panel-kicker{font-size:10px;letter-spacing:.15em;color:var(--blue);font-weight:900}.panel-head h2{font-size:20px;margin:2px 0 0}.icon-btn{border:0;background:#f1f5f9;color:#334155;width:30px;height:30px;border-radius:9px;font-size:20px;cursor:pointer}.section{border-top:1px solid var(--line);padding-top:14px;margin-top:14px}.section:first-of-type{border-top:0;padding-top:0;margin-top:0}.label{font-size:11px;font-weight:900;color:#475569;margin:0 0 7px}.select{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:#f8fafc;color:#334155;font-size:12px;font-weight:650;outline:none;margin-bottom:8px}.select:focus{border-color:#93c5fd;box-shadow:0 0 0 3px rgba(37,99,235,.1)}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:7px}.btn{border:1px solid var(--line);background:#f8fafc;color:#475569;border-radius:10px;padding:9px 8px;font-size:11px;font-weight:800;cursor:pointer}.btn.active{background:#eff6ff;border-color:#93c5fd;color:#1d4ed8}.btn:hover{transform:translateY(-1px)}.hint{font-size:10px;color:#94a3b8;line-height:1.45}.reset{width:100%;border:0;border-radius:10px;background:#0f172a;color:white;padding:10px;font-weight:800;cursor:pointer;margin-top:14px}.reset:hover{background:#1e293b}
+#open-panel{display:none;position:fixed;z-index:31;right:16px;top:16px;width:42px;height:42px;border:0;border-radius:12px;background:#0f172a;color:#fff;font-size:20px;box-shadow:var(--shadow);cursor:pointer}#open-panel.visible{display:block}
+#north{position:fixed;z-index:22;right:382px;top:18px;width:48px;height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(15,23,42,.15);pointer-events:none}.north-arrow{font-size:30px;line-height:26px;font-weight:900}.north-label{font-size:10px;font-weight:900;color:var(--blue);margin-top:3px}
+#stage-message{position:fixed;z-index:18;left:50%;top:50%;transform:translate(-50%,-50%);padding:13px 18px;background:rgba(15,23,42,.9);color:#fff;border-radius:13px;box-shadow:0 12px 35px rgba(15,23,42,.25);font-size:13px;font-weight:800;pointer-events:none}#stage-message.hidden{display:none}
+#map-legend{position:fixed;z-index:25;left:17px;bottom:53px;width:275px;display:none;background:rgba(255,255,255,.97);border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:0 10px 30px rgba(15,23,42,.16)}#map-legend.visible{display:block}.legend-title{font-size:12px;font-weight:900;margin-bottom:7px}.legend-sub{font-size:10px;color:var(--muted);margin-bottom:7px}.legend-row{display:flex;align-items:center;gap:7px;font-size:10px;color:#334155;margin:4px 0}.dot{width:12px;height:12px;border-radius:50%;display:inline-block}.dot.green{background:#16a34a}.dot.red{background:#dc2626}.dot.gray{background:#94a3b8}
+#loading{display:none;position:fixed;z-index:100;left:50%;bottom:24px;transform:translateX(-50%);background:rgba(15,23,42,.95);color:#fff;padding:10px 15px;border-radius:10px;font-size:12px;box-shadow:0 8px 25px rgba(0,0,0,.2)}#loading.visible{display:block}
+#analysis-panel{position:fixed;z-index:50;left:18px;top:18px;width:min(520px,calc(100vw - 36px));max-height:calc(100vh - 36px);overflow:auto;background:var(--panel);border:1px solid rgba(255,255,255,.8);border-radius:18px;box-shadow:var(--shadow);padding:18px;display:none}#analysis-panel.visible{display:block}.analysis-head{display:flex;justify-content:space-between;gap:12px}.analysis-kicker{font-size:10px;font-weight:900;letter-spacing:.14em;color:var(--blue)}.analysis-head h2{font-size:20px;line-height:1.2;margin:3px 0 0}.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin:15px 0}.tab{border:1px solid var(--line);background:#f8fafc;color:#475569;border-radius:9px;padding:8px 4px;font-size:10px;font-weight:850;cursor:pointer}.tab.active{background:#eff6ff;border-color:#93c5fd;color:#1d4ed8}.analysis-content{font-size:12px}.empty-state{padding:25px 10px;text-align:center;color:var(--muted)}.hero{background:#f8fafc;border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:11px}.hero h3{font-size:17px;line-height:1.2;margin:2px 0 4px}.muted{color:var(--muted);font-size:11px}.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:9px 0}.card{background:#f8fafc;border:1px solid var(--line);border-radius:11px;padding:10px}.card .k{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:900}.card .v{font-size:18px;font-weight:900;margin-top:3px}.card .s{font-size:10px;color:var(--muted);margin-top:2px}.section-title{font-size:12px;font-weight:900;margin:14px 0 7px}.compare-row{display:grid;grid-template-columns:1.35fr .8fr .8fr;gap:6px;align-items:center;padding:7px 0;border-bottom:1px solid #eef2f7}.compare-row b{font-size:10px}.compare-row span{font-size:10px;text-align:right}.bar{height:9px;background:#e2e8f0;border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;border-radius:99px;background:#2563eb}.badge{display:inline-block;border-radius:99px;padding:3px 7px;font-size:9px;font-weight:900}.badge.good{background:#dcfce7;color:#166534}.badge.warn{background:#fef3c7;color:#92400e}.badge.bad{background:#fee2e2;color:#991b1b}.badge.neutral{background:#e2e8f0;color:#475569}.callout{border-left:4px solid #2563eb;background:#eff6ff;padding:10px 11px;border-radius:9px;font-size:11px;line-height:1.5;margin:9px 0}.callout.green{border-left-color:#16a34a;background:#f0fdf4}.callout.amber{border-left-color:#d97706;background:#fffbeb}.callout.red{border-left-color:#dc2626;background:#fef2f2}.table-like{border:1px solid var(--line);border-radius:10px;overflow:hidden}.table-head,.table-row{display:grid;grid-template-columns:1.5fr .75fr .75fr .75fr;gap:5px;padding:7px 8px;align-items:center}.table-head{background:#f1f5f9;font-size:9px;font-weight:900;color:#475569}.table-row{font-size:10px;border-top:1px solid #eef2f7}.table-row strong{font-size:10px}.rank{font-size:9px;color:var(--muted)}.chart{width:100%;height:210px;border:1px solid var(--line);border-radius:11px;background:#fff}.axis-label{font-size:9px;fill:#64748b}.point{cursor:pointer}.formula{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#0f172a;color:#e2e8f0;padding:10px;border-radius:9px;font-size:10px;line-height:1.5;overflow:auto}.info{font-size:10px;color:#64748b;line-height:1.5}.close-analysis{border:0;background:#f1f5f9;color:#334155;width:30px;height:30px;border-radius:9px;font-size:20px;cursor:pointer}
+#cutoff-info{position:fixed;z-index:70;display:none;right:390px;top:88px;width:340px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px}.info-title{font-size:15px;font-weight:900;margin:0 0 7px}.info-text{font-size:11px;line-height:1.5;color:#475569}
+.axis-switch{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:10px 0 8px;padding:8px;background:#f8fafc;border:1px solid var(--line);border-radius:11px}.axis-switch span{font-size:10px;font-weight:900;color:#475569;margin-right:3px}.axis-switch .btn{width:auto;padding:7px 10px}.chart-scatter{height:390px}.selected-label{font-size:10px;fill:#92400e;font-weight:900}.scatter-point{transition:r .15s ease;cursor:pointer}.scatter-point:hover{opacity:1;stroke:#0f172a;stroke-width:2}.selected-point{filter:drop-shadow(0 2px 3px rgba(15,23,42,.25))}
+@media(max-width:900px){#control-panel{width:310px;right:10px;top:10px;max-height:calc(100vh - 20px)}#north{right:330px;top:10px}#analysis-panel{top:10px;left:10px;max-height:calc(100vh - 20px)}#map-title{left:10px;top:10px}.ol-zoom{right:10px}}
+@media(max-width:700px){.chart-scatter{height:300px}#map-title small{display:none}#map-title strong{font-size:15px}#north{display:none}#control-panel{width:calc(100vw - 20px)}#analysis-panel{width:calc(100vw - 20px)}.tabs{grid-template-columns:repeat(2,1fr)}.cards{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="north"><div class="north-arrow">↑</div><div class="north-label">N</div></div>
+<div id="stage-message">Selecione uma etapa para explorar as escolas.</div>
+<div id="map-title"><div class="eyebrow">FADEB/MS · NUAD</div><strong>Mapa Educacional — MS</strong><small>Desempenho, território e contexto escolar</small></div>
+<div id="loading">Carregando dados...</div>
+<div id="map-legend"></div>
+<button id="open-panel" aria-label="Abrir filtros">☰</button>
+<aside id="control-panel">
+  <div class="panel-head"><div><div class="panel-kicker">EXPLORADOR EDUCACIONAL</div><h2>Filtros e camadas</h2></div><button class="icon-btn" id="close-panel">×</button></div>
+  <div class="section">
+    <div class="label">Município</div><select id="municipio" class="select"><option value="">Todos os municípios</option></select>
+    <div class="label">Etapa</div><select id="etapa" class="select"><option value="">Todas as etapas</option></select>
+    <div class="label">Rede</div><select id="rede" class="select"><option value="">Todas as redes</option></select>
+  </div>
+  <div class="section">
+    <div class="label">Indicador no mapa</div><div class="grid2"><button class="btn active" id="port">Português</button><button class="btn" id="mat">Matemática</button></div>
+  </div>
+  <div class="section">
+    <div class="label">Escola</div><select id="escola" class="select"><option value="">Selecione uma escola</option></select>
+    <div class="hint" id="count">Selecione uma etapa para exibir as escolas.</div>
+  </div>
+  <div class="section">
+    <div class="label">Camadas territoriais</div><div class="grid2"><button class="btn" id="renda">Renda</button><button class="btn" id="ppi">PPI</button><button class="btn active" id="municipios">Municípios</button><button class="btn" id="analise">Abrir análise</button></div>
+    <div class="hint" style="margin-top:7px">Renda e PPI usam a mesma base de setores censitários e são carregados somente quando necessários.</div>
+  </div>
+  <div class="section"><div class="label">Leitura da proficiência</div><div id="performance-legend" class="hint"></div><div class="hint" style="margin-top:7px">O ponto de corte varia conforme a etapa. <button class="btn" id="info-cut" style="padding:3px 7px;width:auto;display:inline-block">?</button></div></div>
+  <button class="reset" id="reset">Limpar filtros e voltar ao MS</button>
+  <div class="hint" style="text-align:center;margin-top:9px">A ferramenta apoia a leitura de contexto. Não use um indicador isolado para julgar a qualidade de uma escola.</div>
+</aside>
+<section id="analysis-panel">
+  <div class="analysis-head"><div><div class="analysis-kicker">ANÁLISE EM 4 FASES</div><h2 id="analysis-title">Explorador Educacional</h2></div><button class="close-analysis" id="close-analysis">×</button></div>
+  <div class="tabs"><button class="tab active" data-tab="1">1 · Minha escola</button><button class="tab" data-tab="2">2 · Comparar</button><button class="tab" data-tab="3">3 · Município</button><button class="tab" data-tab="4">4 · Contexto</button></div>
+  <div id="analysis-content" class="analysis-content"></div>
+</section>
+<div id="cutoff-info"><div class="info-title">Como interpretar o nível adequado?</div><div class="info-text">O site usa os pontos de corte configurados para esta aplicação a partir da NOTA TÉCNICA Nº 34/2025/CGEE/DIRED-INEP. O corte é específico para a etapa e componente. Estar acima ou abaixo do corte é uma informação de proficiência, não uma classificação completa da qualidade da escola.</div></div>
+<script src="./resources/qgis2web_expressions.js"></script>
+<script src="./resources/functions.js"></script>
+<script src="./resources/ol.js"></script>
+<script src="./resources/Autolinker.min.js"></script>
+<script src="./styles/Municipios_Mato_Grosso_do_Sul_2025_3_style.js"></script>
+<script src="./styles/MetadeMatemtica_4_style.js"></script>
+<script src="./styles/MetadePortugus_5_style.js"></script>
+<script src="./layers/Municipios_MS_2025_otimizado.js"></script>
+<script src="./layers/Escolas_IDEB_2025.js"></script>
+<script src="./layers/layers.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>
